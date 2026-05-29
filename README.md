@@ -14,7 +14,7 @@ Currently supported inputs:
     python3 main.py
 ```
 
-The program will run with logs and update the graph in `memory/graph.json`
+The program will run with logs and update the graph in `python/memory/graph.json`
 
 ## How it works
 
