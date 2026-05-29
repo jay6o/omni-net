@@ -16,12 +16,21 @@ nlp = spacy.load("en_core_web_trf")
 
 def process_pdf(file: str, person_of_interest: str) -> int :
 
-  """ Process entities from a document as text and adds them to the in-memory graph"""
+  """ Process entities from a document as text and adds them to the in-memory graph
+  
+  Args:
+    file (str): string of path to file.
+    person_of_interest (str): person we are trying to find.
+
+  Returns:
+    int: exit code.
+  """
   person_of_interest = normalize_name(person_of_interest.strip())
   memory_path = Path("memory") / "graph.json"
-  graph_obj = EntityGraph(memory_path)
-  graph_lock = Lock()
+  graph_obj = EntityGraph(memory_path) # Load graph
+  graph_lock = Lock() # Initialize lock
 
+  # Use a lock to initialize the graph
   with graph_lock:
     if person_of_interest not in graph_obj.graph["name_index"]:
       poi_id = graph_obj.graph["curr_id"]
@@ -38,7 +47,7 @@ def process_pdf(file: str, person_of_interest: str) -> int :
       graph_obj.graph["curr_id"] += 1
       graph_obj.save_file()
 
-  # Extract text
+  # Extract text from input pdf
   reader = PdfReader(file)
   content = ""
   for page in reader.pages:
@@ -49,7 +58,9 @@ def process_pdf(file: str, person_of_interest: str) -> int :
   # Process language
   doc = nlp(content)
 
+  # Use a set to prevent executing duplicate threads
   names_to_submit = set()
+
 
   for ent in doc.ents:
     if ent.label_ == "PERSON":
@@ -59,8 +70,7 @@ def process_pdf(file: str, person_of_interest: str) -> int :
         continue
 
       if name in graph_obj.graph["name_index"]: # Exact match
-        if name in graph_obj.graph["name_index"]: # Exact match
-          existing_id = graph_obj.graph["name_index"][name]
+        existing_id = graph_obj.graph["name_index"][name]
         if graph_obj.graph["entities"][str(existing_id)].get("relationship_known", True):
           continue  # already known, skip
         match = name  # known but relationship unknown, search again
@@ -78,6 +88,14 @@ def process_pdf(file: str, person_of_interest: str) -> int :
       print(f"Found {len(names_to_submit)} new entities to process")
 
   def process_name(name):
+    """Individual process of name that finds a relationship and overwrites it to the graph file
+
+    Args:
+      name (str): Name to process.
+    
+    Returns:
+      None: Overwrites the graph file, returns nothing.
+    """
     print(f"Searching {name}")
     relationship = search_relation(name, person_of_interest)
     with graph_lock:
@@ -87,6 +105,7 @@ def process_pdf(file: str, person_of_interest: str) -> int :
       graph_obj.add_person(name, person_of_interest, relationship)
       graph_obj.save_file()
 
+  # ThreadPool for all names in our list of names to process
   with ThreadPoolExecutor(max_workers=3) as executor:
     futures = {
       executor.submit(process_name, name): name 

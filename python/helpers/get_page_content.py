@@ -4,6 +4,15 @@ from bs4 import BeautifulSoup
 from helpers.ollama_query import ollama_query
 
 def get_page_content(url: str):
+    """Extract contents from a given page as a url.
+    
+    Args:
+        url (str): the url.
+    
+    Returns:
+        str: If the page was able to have been fetched.
+        None: If we couldn't get the page.
+    """
     try:
         resp = httpx.get(
             url,

@@ -3,7 +3,15 @@ from difflib import SequenceMatcher
 def name_score(a:str,b:str):
     """ Give a score for 2 names alikeness.
         Used to match 2 entities to each other,
-        or find an existing entity in our memory """
+        or find an existing entity in our memory 
+        
+    Args:
+        a (str): First name.
+        b (str): Second name.
+
+    Returns:
+        float: The confidence score of 2 names being alike in the range [0.0,1.0]
+    """
 
     if a == b:
         return 1.0

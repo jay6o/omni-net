@@ -3,6 +3,7 @@ from helpers.search_relation import search_relation
 from env import FILE, POI
 
 def main() -> int :
+    """Driver method"""
     process_pdf(FILE, POI)
 
 

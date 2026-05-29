@@ -1,16 +1,29 @@
 import json
 from pathlib import Path
 class EntityGraph:
+    """
+    A class used to load and edit graph information from a json file.
+
+    Attributes
+    ----------
+    path: str
+        The path to the json file that stores or will store our graph.
+    graph:
+        The python object representation of the graph that is loaded from our json file.
+    """
+
     def __init__(self, path: Path) -> None :
         self.path = path
         with self.path.open("r", encoding="utf-8") as file:
             self.graph = json.load(file)
     
     def reload(self):
+        """Update object to keep up with concurrent updates"""
         with self.path.open("r", encoding="utf-8") as file:
             self.graph = json.load(file)
 
     def add_person(self, name: str, connect_to: str, relation: str) -> None:
+        """Add new person to the graph with relationships"""
         curr_id = self.graph["curr_id"]
         relationship_known = relation.strip().lower() != "unknown"
 
@@ -41,5 +54,6 @@ class EntityGraph:
             })
 
     def save_file(self):
+        """Write self.graph object to the json file"""
         with self.path.open("w", encoding="utf-8") as file:
             json.dump(self.graph, file, indent=2)
