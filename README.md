@@ -8,7 +8,7 @@ Currently supported inputs:
 | ---------------- |
 | .pdf             |
 
-- Edit env.py.template to store your inputs, then rename it to env.py
+- Edit `python/env.py.template` to store your inputs, then rename it to `env.py`
 - Run:  
 ```sh 
     python3 main.py
