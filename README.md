@@ -8,8 +8,8 @@ Currently supported inputs:
 | ---------------- |
 | .pdf             |
 
-- In `main.py` update `main()` to accept your inputs
-- Then run:  
+- Edit env.py.template to store your inputs, then rename it to env.py
+- Run:  
 ```sh 
     python3 main.py
 ```
