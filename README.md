@@ -8,10 +8,11 @@ Currently supported inputs:
 | ---------------- |
 | .pdf             |
 
+- From `python` install all requirements by running `pip3 install -r requirements.txt`
 - Edit `python/env.py.template` to store your inputs, then rename it to `env.py`
-- Run:  
+- From the root folder, run by running:  
 ```sh 
-    python3 main.py
+    sh run.sh
 ```
 
 The program will run with logs and update the graph in `python/memory/graph.json`
