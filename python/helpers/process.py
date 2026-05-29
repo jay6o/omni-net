@@ -9,10 +9,13 @@ from helpers.normalize import normalize_name
 from helpers.search_relation import search_relation
 from helpers.names_alike import name_score
 from helpers.is_person_name import is_person_name
+from helpers.get_page_content import get_page_content
+from helpers.initialize_graph import initialize_graph
+from helpers.process_content import process_content
 
 from models.EntityGraph import EntityGraph
 
-nlp = spacy.load("en_core_web_trf")
+nlp = spacy.load("en_core_web_sm") #switch to trf for smaller searches but more accurate results
 
 def process_pdf(file: str, person_of_interest: str) -> int :
 
@@ -29,23 +32,7 @@ def process_pdf(file: str, person_of_interest: str) -> int :
   memory_path = Path("memory") / "graph.json"
   graph_obj = EntityGraph(memory_path) # Load graph
   graph_lock = Lock() # Initialize lock
-
-  # Use a lock to initialize the graph
-  with graph_lock:
-    if person_of_interest not in graph_obj.graph["name_index"]:
-      poi_id = graph_obj.graph["curr_id"]
-      graph_obj.graph["entities"][str(poi_id)] = {
-        "id": poi_id,
-        "type": "Person",
-        "title": person_of_interest,
-        "relationship_known": True,
-        "relationship": "Person of Interest",
-        "mentions": 1,
-        "context": None
-      }
-      graph_obj.graph["name_index"][person_of_interest] = poi_id
-      graph_obj.graph["curr_id"] += 1
-      graph_obj.save_file()
+  graph_obj = initialize_graph(graph_obj,person_of_interest,graph_lock)
 
   # Extract text from input pdf
   reader = PdfReader(file)
@@ -54,72 +41,27 @@ def process_pdf(file: str, person_of_interest: str) -> int :
       text = page.extract_text()
       if text:
           content += text
-
-  # Process language
-  doc = nlp(content)
-
-  # Use a set to prevent executing duplicate threads
-  names_to_submit = set()
-
-
-  for ent in doc.ents:
-    if ent.label_ == "PERSON":
-      # Find a name match in our graph or use new name
-      name = normalize_name(ent.text)
-      if name in names_to_submit or not is_person_name(name):
-        continue
-
-      if name in graph_obj.graph["name_index"]: # Exact match
-        existing_id = graph_obj.graph["name_index"][name]
-        if graph_obj.graph["entities"][str(existing_id)].get("relationship_known", True):
-          continue  # already known, skip
-        match = name  # known but relationship unknown, search again
-      else:
-        closest_match = 0
-        matching_name = None
-        for n in graph_obj.graph["name_index"]:  # Find matching name over 80% confidence or add new name
-          curr_score = name_score(name, n)
-          if curr_score > closest_match:
-            matching_name = n
-            closest_match = curr_score
-        match = matching_name if closest_match >= 0.8 else name
-
-      names_to_submit.add(match)
-      print(f"Found {len(names_to_submit)} new entities to process")
-
-  def process_name(name):
-    """Individual process of name that finds a relationship and overwrites it to the graph file
-
-    Args:
-      name (str): Name to process.
-    
-    Returns:
-      None: Overwrites the graph file, returns nothing.
-    """
-    print(f"Searching {name}")
-    relationship = search_relation(name, person_of_interest)
-    with graph_lock:
-      graph_obj.reload()
-      if relationship == "unknown":
-        return
-      graph_obj.add_person(name, person_of_interest, relationship)
-      graph_obj.save_file()
-
-  # ThreadPool for all names in our list of names to process
-  with ThreadPoolExecutor(max_workers=3) as executor:
-    futures = {
-      executor.submit(process_name, name): name 
-      for name in names_to_submit
-    }
-    for future in as_completed(futures):
-      name = futures[future]
-      try:
-        future.result()
-        print(f"Saved {name}")
-      except Exception as e:
-        print(f"Failed on {name}: {e}")
+  # Use content to build graph
+  process_content(nlp, content, graph_obj, person_of_interest, graph_lock)
   return 0
 
+def process_html(url: str, person_of_interest: str) -> None :
+  try:
+    contents = get_page_content(url)
+    if contents:
+      person_of_interest = normalize_name(person_of_interest.strip())
+      memory_path = Path("memory") / "graph.json"
+      graph_obj = EntityGraph(memory_path) # Load graph
+      graph_lock = Lock() # Initialize lock
+      graph_obj = initialize_graph(graph_obj,person_of_interest,graph_lock)
+
+      # Use contents to build graph
+      process_content(nlp, contents, graph_obj, person_of_interest, graph_lock)
+      return 0
+    else:
+      raise Exception(f"Could not parse contents of page")
+  except Exception as e:
+    print(f"Raised when processing html: {e}")
 
 if __name__ == "__main__":
    pass

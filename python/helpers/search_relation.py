@@ -30,7 +30,7 @@ def search_relation(entity: str, poi: str) -> str :
          snippet = r.get("body", "")
          try:
              page_content = future.result(timeout=5)
-             context += f"{page_content}\n\n" if page_content else f"{snippet}\n\n"
+             context += f"{page_content[:5000]}\n\n" if page_content else f"{snippet}\n\n"
          except TimeoutError:
              print(f"    [timeout] {r.get('href')}")
              context += f"{snippet}\n\n"

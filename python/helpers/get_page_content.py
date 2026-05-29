@@ -1,4 +1,4 @@
-import httpx
+import subprocess
 import json
 from bs4 import BeautifulSoup
 from helpers.ollama_query import ollama_query
@@ -14,24 +14,32 @@ def get_page_content(url: str):
         None: If we couldn't get the page.
     """
     try:
-        resp = httpx.get(
-            url,
-            headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
-                },
-            timeout=5,
-            follow_redirects=True
+        resp = subprocess.run(
+            [
+                "curl", "-L",
+                "-s",
+                "-A", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+                "--max-time", "5",     # hard timeout
+                "--compressed",        # handle gzip
+                url
+            ],
+            capture_output=True,
+            text=True,
+            timeout=8
         )
-        # Return None on fail fetch
-        if resp.status_code < 200 or resp.status_code >= 400:
-            raise Exception(f"status {resp.status_code}")
+        
+        if resp.returncode != 0:
+            print(f"    [fetch failed] {url}: curl exit {resp.returncode}")
+            return None
 
-        soup = BeautifulSoup(resp.text, "html.parser")
+        soup = BeautifulSoup(resp.stdout, "html.parser")
         for tag in soup(["script", "style", "nav", "footer", "header", "aside"]):
             tag.decompose()
 
-        text = soup.get_text(separator=" ", strip=True)
-        return text
+        return soup.get_text(separator=" ", strip=True)
+    except subprocess.TimeoutExpired:
+        print(f"    [timeout] {url}")
+        return None
     except Exception as e:
         print(f"    [fetch failed] {url}: {e}")
         return None

@@ -13,10 +13,10 @@ def ollama_query(entity: str, eoi: str, context: str) -> str:
     """
 
     q = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-        You are a relationship extractor. Reply with a maximum of 35 words describing the relationship. No explanation. No sentences. If unknown, reply with exactly "unknown".<|eot_id|>
+        You are a relationship extractor. Reply with a maximum of 35 words describing the relationship. If you can find first and last name, include them in your response. You must find an explicit description of their relationship within a sentence. No explanation. No sentences. If unknown, reply with exactly "unknown".<|eot_id|>
         <|start_header_id|>user<|end_header_id|>
         Text: {context}
-        What is {entity}'s relationship to {eoi}? Reply in 6 words or less, or "unknown".<|eot_id|>
+        What is {entity}'s relationship to {eoi}? Reply in 35 words or less, or "unknown".<|eot_id|>
         <|start_header_id|>assistant<|end_header_id|>
     """
     response = ollama.generate(
