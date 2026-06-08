@@ -2,6 +2,9 @@
 
 ## Use web crawling, NLP, and LLM to build a visual graph of all relationships between entities in a social network using open source information.
 
+<img width="1440" height="780" alt="Screenshot 2026-06-08 at 2 38 38 PM" src="https://github.com/user-attachments/assets/5e94e7a1-c409-4eec-a1f8-a18f5ec15cf8" />
+
+
 ## Usage
 Currently supported inputs:
 | Type             |
@@ -17,6 +20,8 @@ Currently supported inputs:
 ```
 
 The program will run with logs and update the graph in `python/memory/graph.json`
+
+You can then use import this graph.json into the web app to visualize the relationships.
 
 ## Graph visualizer
 
