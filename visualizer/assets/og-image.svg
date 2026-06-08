@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">OMNI NET relationship graph visualizer</title>
+  <desc id="desc">Brand preview card for OMNI NET with relationship graph nodes and product title.</desc>
+  <rect width="1200" height="630" fill="#111317"/>
+  <path d="M0 96h1200M0 192h1200M0 288h1200M0 384h1200M0 480h1200M0 576h1200M120 0v630M240 0v630M360 0v630M480 0v630M600 0v630M720 0v630M840 0v630M960 0v630M1080 0v630" stroke="#23272e" stroke-width="1"/>
+  <circle cx="820" cy="315" r="162" fill="none" stroke="#59c7a5" stroke-width="6"/>
+  <circle cx="820" cy="315" r="82" fill="none" stroke="#eecc65" stroke-width="4"/>
+  <path d="M707 210 820 315 966 224M820 315 944 443M820 315 684 455M820 315 776 156" fill="none" stroke="#dfe7f1" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="707" cy="210" r="22" fill="#59c7a5"/>
+  <circle cx="966" cy="224" r="22" fill="#eecc65"/>
+  <circle cx="944" cy="443" r="22" fill="#ee7b6a"/>
+  <circle cx="684" cy="455" r="22" fill="#dfe7f1"/>
+  <circle cx="776" cy="156" r="22" fill="#59c7a5"/>
+  <circle cx="820" cy="315" r="28" fill="#59c7a5" stroke="#111317" stroke-width="10"/>
+  <text x="96" y="262" fill="#f2f4f7" font-family="Inter, Arial, sans-serif" font-size="88" font-weight="800">OMNI NET</text>
+  <text x="102" y="330" fill="#59c7a5" font-family="Inter, Arial, sans-serif" font-size="31" font-weight="700">Relationship Graph Visualizer</text>
+  <text x="102" y="388" fill="#a9b0bb" font-family="Inter, Arial, sans-serif" font-size="28">Import JSON. Explore entities. Trace direct connections.</text>
+</svg>

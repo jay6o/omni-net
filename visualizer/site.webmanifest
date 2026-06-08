@@ -1,0 +1,23 @@
+{
+  "name": "OMNI NET Relationship Graph Visualizer",
+  "short_name": "OMNI NET",
+  "description": "A private browser-based relationship graph visualizer for imported JSON entity data.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#111317",
+  "theme_color": "#111317",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "64x64",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/apple-touch-icon.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

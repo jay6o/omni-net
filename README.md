@@ -18,6 +18,30 @@ Currently supported inputs:
 
 The program will run with logs and update the graph in `python/memory/graph.json`
 
+## Graph visualizer
+
+The visualizer is now a standalone static web app. It does not need the Python crawler to run; open it and use the upload button to import any graph JSON with this shape:
+
+```json
+{
+  "entities": {},
+  "relationships": []
+}
+```
+
+To run it locally, serve the `visualizer` folder:
+
+```sh
+cd visualizer
+python3 -m http.server 5174
+```
+
+Then visit `http://127.0.0.1:5174/`.
+
+To deploy it, publish the `visualizer/` directory as a static site. No build step is required. The page includes SEO metadata, social preview metadata, a web manifest, robots rules, and local brand assets. You can still import the crawler output from `python/memory/graph.json` manually with the upload button.
+
+After importing a graph, select any entity to edit its name or description in the side panel. Use the export button to download the updated JSON file.
+
 ## How it works
 
 1. Input source containing references to other entities, along with our entity of interest

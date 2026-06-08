@@ -53,6 +53,38 @@ class EntityGraph:
                 "relationship": relation
             })
 
+    def has_relationship(self, from_name: str, to_name: str) -> bool:
+        """Return whether two known people already have a relationship edge."""
+        if from_name not in self.graph["name_index"] or to_name not in self.graph["name_index"]:
+            return False
+
+        from_id = self.graph["name_index"][from_name]
+        to_id = self.graph["name_index"][to_name]
+        for relationship in self.graph["relationships"]:
+            relationship_from = str(relationship.get("from"))
+            relationship_to = str(relationship.get("to"))
+            if {relationship_from, relationship_to} == {str(from_id), str(to_id)}:
+                return True
+        return False
+
+    def add_relationship(self, from_name: str, to_name: str, relation: str) -> bool:
+        """Add a relationship edge between existing people if it is known and new."""
+        if relation.strip().lower() == "unknown":
+            return False
+
+        if from_name not in self.graph["name_index"] or to_name not in self.graph["name_index"]:
+            return False
+
+        if self.has_relationship(from_name, to_name):
+            return False
+
+        self.graph["relationships"].append({
+            "from": self.graph["name_index"][from_name],
+            "to": self.graph["name_index"][to_name],
+            "relationship": relation
+        })
+        return True
+
     def save_file(self):
         """Write self.graph object to the json file"""
         with self.path.open("w", encoding="utf-8") as file:

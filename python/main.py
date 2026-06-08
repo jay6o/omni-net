@@ -13,7 +13,6 @@ def main() -> int :
     file_path = Path("memory/graph.json")
     if not file_path.is_file():
          create_graph_json(file_path)
-    create_graph_json()
     process_html(INPUT, POI)
 
 def create_graph_json(file_path: Path):

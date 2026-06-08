@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OMNI NET | Relationship Graph Visualizer</title>
+    <meta name="description" content="OMNI NET is a private relationship graph visualizer for exploring entities, direct connections, and imported JSON graph data in the browser.">
+    <meta name="application-name" content="OMNI NET">
+    <meta name="author" content="OMNI NET">
+    <meta name="theme-color" content="#111317">
+    <meta name="color-scheme" content="dark">
+    <meta name="robots" content="index,follow">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="OMNI NET">
+    <meta property="og:title" content="OMNI NET | Relationship Graph Visualizer">
+    <meta property="og:description" content="Explore entity relationships from imported JSON graph data with a fast, private, browser-based visualizer.">
+    <meta property="og:image" content="./assets/og-image.svg">
+    <meta property="og:image:type" content="image/svg+xml">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="OMNI NET | Relationship Graph Visualizer">
+    <meta name="twitter:description" content="Explore entity relationships from imported JSON graph data with a private browser-based visualizer.">
+    <meta name="twitter:image" content="./assets/og-image.svg">
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+    <link rel="shortcut icon" href="./favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./assets/apple-touch-icon.svg">
+    <link rel="manifest" href="./site.webmanifest">
+    <link rel="stylesheet" href="./styles.css">
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "OMNI NET",
+        "applicationCategory": "DataVisualizationApplication",
+        "operatingSystem": "Any",
+        "description": "A private browser-based relationship graph visualizer for imported JSON entity data.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="toolbar" aria-label="Graph controls">
+        <div class="brand">
+          <span class="mark" aria-hidden="true"></span>
+          <div>
+            <h1>OMNI NET</h1>
+            <p id="graphSummary">Loading graph...</p>
+          </div>
+        </div>
+
+        <label class="search-wrap">
+          <span>Search</span>
+          <input id="searchInput" type="search" placeholder="Find an entity or relationship">
+        </label>
+
+        <div class="control-group" aria-label="Graph filters">
+          <label>
+            <span>Edges</span>
+            <select id="edgeFilter">
+              <option value="all">All relationships</option>
+              <option value="known">Known only</option>
+              <option value="unknown">Unknown only</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Link distance</span>
+            <input id="distanceRange" type="range" min="55" max="190" value="112">
+          </label>
+        </div>
+
+        <div class="action-row">
+          <input id="graphFileInput" type="file" accept="application/json,.json" hidden>
+          <button id="importButton" type="button" title="Import graph JSON" aria-label="Import graph JSON">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M12 3v12M7 8l5-5 5 5M5 15v4h14v-4"></path>
+            </svg>
+          </button>
+          <button id="fitButton" type="button" title="Fit graph to view" aria-label="Fit graph to view">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5M8 12h8M12 8v8"></path>
+            </svg>
+          </button>
+          <button id="reloadButton" type="button" title="Reload imported graph" aria-label="Reload imported graph" disabled>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M20 6v5h-5M4 18v-5h5M18.4 9A7 7 0 0 0 6.2 6.8L4 9M5.6 15a7 7 0 0 0 12.2 2.2L20 15"></path>
+            </svg>
+          </button>
+          <button id="exportButton" type="button" title="Export graph JSON" aria-label="Export graph JSON" disabled>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M12 21V9M7 16l5 5 5-5M5 3h14v4H5z"></path>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <section class="graph-stage" aria-label="Relationship graph">
+        <canvas id="graphCanvas"></canvas>
+        <div id="emptyState" class="empty-state" hidden>No matching entities</div>
+      </section>
+
+      <aside class="detail-panel" aria-label="Selected entity">
+        <div class="panel-header">
+          <p>Selected Entity</p>
+          <button id="clearSelection" type="button" title="Clear selection" aria-label="Clear selection">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M6 6l12 12M18 6 6 18"></path>
+            </svg>
+          </button>
+        </div>
+        <h2 id="selectedTitle">Select a node</h2>
+        <form id="entityForm" class="entity-form">
+          <label>
+            <span>Name</span>
+            <input id="entityNameInput" type="text" autocomplete="off" disabled>
+          </label>
+          <label>
+            <span>Description</span>
+            <textarea id="entityDescriptionInput" rows="4" disabled></textarea>
+          </label>
+          <div class="entity-actions">
+            <button id="saveEntityButton" type="submit" title="Save selected entity" aria-label="Save selected entity" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M19 21H5V3h11l3 3zM8 21v-7h8v7M8 3v5h7"></path>
+              </svg>
+            </button>
+            <button id="resetEntityButton" type="button" title="Reset selected entity edits" aria-label="Reset selected entity edits" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"></path>
+              </svg>
+            </button>
+          </div>
+        </form>
+        <dl id="selectedMeta">
+          <div>
+            <dt>Type</dt>
+            <dd>None</dd>
+          </div>
+          <div>
+            <dt>Mentions</dt>
+            <dd>0</dd>
+          </div>
+          <div>
+            <dt>Relationship</dt>
+            <dd>None</dd>
+          </div>
+          <div>
+            <dt>Connections</dt>
+            <dd>0</dd>
+          </div>
+        </dl>
+        <div class="connections">
+          <h3>Connections</h3>
+          <ul id="connectionList"></ul>
+        </div>
+      </aside>
+    </main>
+
+    <noscript>
+      <p class="noscript-message">OMNI NET needs JavaScript enabled to render imported relationship graphs.</p>
+    </noscript>
+    <script src="./visualizer.js"></script>
+  </body>
+</html>
