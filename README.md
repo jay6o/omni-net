@@ -48,7 +48,7 @@ You can also use the web app at `https://omni-net-flame.vercel.app/` and import 
 
 1. Input source containing references to other entities, along with our entity of interest
 2. Program processes language from the input to identify entities using spaCy NLP
-3. Take each identified entity and run a relationship search using the crawling bot (ddgs, httpx, & bs4)
+3. Take each identified entity and run a relationship search using the crawling bot (cURL & BeautifulSoup)
 4. Using crawling results, pass them to Ollama to give relationships a title
 5. Store the relationships in memory as a graph
 
