@@ -43,10 +43,7 @@ python3 -m http.server 5174
 
 Then visit `http://127.0.0.1:5174/`.
 
-To deploy it, publish the `visualizer/` directory as a static site. No build step is required. The page includes SEO metadata, social preview metadata, a web manifest, robots rules, and local brand assets. You can still import the crawler output from `python/memory/graph.json` manually with the upload button.
-
-After importing a graph, select any entity to edit its name or description in the side panel. Use the export button to download the updated JSON file.
-
+You can also use the web app at `https://omni-net-flame.vercel.app/` and import your graph file.
 ## How it works
 
 1. Input source containing references to other entities, along with our entity of interest
