@@ -78,13 +78,18 @@ function loadGraph(data, fileName = "") {
   exportButton.disabled = false;
 }
 
+function computeRadius(node, linkCount) {
+  const base = node.id === 0 || node.relationship === "Person of Interest" ? 24 : 20;
+  return base + Math.min(22, linkCount * 4);
+}
+
 function normalizeGraph(data) {
   const nodes = Object.entries(data.entities || {}).map(([entityKey, entity], index) => ({
     ...entity,
     id: Number(entity.id),
     key: String(entityKey),
     title: entity.title || `Entity ${entity.id}`,
-    radius: index === 0 ? 14 : 8 + Math.min(8, Number(entity.mentions || 1) * 1.5),
+    radius: 20,
     x: Math.cos(index * 1.91) * (90 + index * 2.5),
     y: Math.sin(index * 1.91) * (90 + index * 2.5),
     vx: 0,
@@ -106,6 +111,16 @@ function normalizeGraph(data) {
       };
     })
     .filter(Boolean);
+
+  const linkCount = new Map(nodes.map((node) => [node.id, 0]));
+  for (const link of links) {
+    linkCount.set(link.source.id, linkCount.get(link.source.id) + 1);
+    linkCount.set(link.target.id, linkCount.get(link.target.id) + 1);
+  }
+
+  nodes.forEach((node) => {
+    node.radius = computeRadius(node, linkCount.get(node.id) || 0);
+  });
 
   return { nodes, links };
 }
@@ -271,6 +286,7 @@ function addRelationship() {
     original: newRelationship
   });
 
+  updateNodeRadii();
   relationshipText.value = "";
   hasLocalEdits = true;
   applyFilters();
@@ -440,38 +456,96 @@ function draw() {
     ctx.stroke();
 
     if (transform.scale > 0.75 || isSelected || isHovered) {
-      ctx.font = `${Math.max(10, 12 / transform.scale)}px Inter, sans-serif`;
-      ctx.fillStyle = palette.text;
+      const baseFontSize = Math.max(8, 12 / transform.scale);
+      ctx.font = `${baseFontSize}px Inter, sans-serif`;
       ctx.textAlign = "center";
-      ctx.textBaseline = "top";
-      wrapLabel(node.title, node.x, node.y + node.radius + 6, 112 / transform.scale);
+      ctx.textBaseline = "middle";
+
+      const words = String(node.title).split(/\s+/).filter(Boolean);
+      if (words.length) {
+        const longestWord = words.reduce((a, b) => {
+          return ctx.measureText(b).width > ctx.measureText(a).width ? b : a;
+        }, words[0]);
+        const longestWordWidth = ctx.measureText(longestWord).width;
+        const targetWidth = node.radius * 1.6;
+        if (longestWordWidth > targetWidth) {
+          const shrink = targetWidth / longestWordWidth;
+          const reducedFontSize = Math.max(8, Math.floor(baseFontSize * Math.min(1, shrink)));
+          ctx.font = `${reducedFontSize}px Inter, sans-serif`;
+        }
+      }
+
+      const labelColor = fill === palette.node ? "#111317" : palette.text;
+      ctx.fillStyle = labelColor;
+      wrapLabel(node.title, node.x, node.y, node.radius * 1.6, transform.scale);
     }
   }
 
   ctx.restore();
 }
 
-function wrapLabel(text, x, y, maxWidth) {
-  const words = String(text).split(/\s+/);
+function wrapLabel(text, x, y, maxWidth, scale = 1) {
+  const effectiveMaxWidth = maxWidth * (scale < 0.8 ? 0.78 : 0.95);
+  const words = String(text).split(/\s+/).filter(Boolean);
   let line = "";
   let lines = [];
+  let usedWords = 0;
 
   for (const word of words) {
     const test = line ? `${line} ${word}` : word;
-    if (ctx.measureText(test).width > maxWidth && line) {
+    if (ctx.measureText(test).width > effectiveMaxWidth && line) {
       lines.push(line);
       line = word;
+      if (lines.length >= 1 && scale < 0.8) {
+        break;
+      }
     } else {
       line = test;
     }
+    usedWords += 1;
   }
   if (line) lines.push(line);
-  lines = lines.slice(0, 2);
-  if (lines.length === 2 && words.length > lines.join(" ").split(/\s+/).length) {
-    lines[1] = `${lines[1].replace(/\.*$/, "")}...`;
+
+  const maxLines = scale < 0.8 ? 1 : 2;
+  if (lines.length > maxLines) {
+    lines = lines.slice(0, maxLines);
   }
 
-  lines.forEach((label, index) => ctx.fillText(label, x, y + index * 15 / transform.scale));
+  const remainderExists = usedWords < words.length || lines.length === maxLines && words.length > lines.join(" ").split(/\s+/).length;
+  if (remainderExists) {
+    const lastIndex = lines.length - 1;
+    lines[lastIndex] = truncateText(lines[lastIndex], effectiveMaxWidth);
+  }
+
+  lines = lines.map((label) => truncateText(label, effectiveMaxWidth));
+
+  const lineHeight = 14 / scale;
+  const startY = y - ((lines.length - 1) * lineHeight) / 2;
+  lines.forEach((label, index) => ctx.fillText(label, x, startY + index * lineHeight));
+}
+
+function truncateText(text, maxWidth) {
+  const ellipsis = "...";
+  if (ctx.measureText(text).width <= maxWidth) {
+    return text;
+  }
+
+  let low = 0;
+  let high = text.length;
+  let best = 0;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const candidate = `${text.slice(0, mid)}${ellipsis}`;
+    if (ctx.measureText(candidate).width <= maxWidth) {
+      best = mid;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  return best > 0 ? `${text.slice(0, best)}${ellipsis}` : ellipsis;
 }
 
 function canvasPoint(event) {
@@ -680,7 +754,7 @@ function addEntity() {
   const newNode = {
     ...entity,
     key: entityKey,
-    radius: 8 + Math.min(8, Number(entity.mentions || 1) * 1.5),
+    radius: computeRadius({ ...entity, id: nextId, relationship: entity.relationship }, 0),
     x: (selectedNode?.x || 0) + 40,
     y: (selectedNode?.y || 0) + 40,
     vx: 0,
@@ -688,6 +762,7 @@ function addEntity() {
   };
 
   sourceGraph.nodes.push(newNode);
+  updateNodeRadii();
   ensureGraphIndexes(importedGraph);
   selectedNode = newNode;
   addEntityNameInput.value = "";
@@ -705,6 +780,7 @@ function removeRelationship(link) {
   if (!confirmed) return;
 
   deleteRelationship(link);
+  updateNodeRadii();
   hasLocalEdits = true;
   applyFilters();
   updateDetails();
@@ -739,6 +815,7 @@ function deleteNode(node) {
   }
 
   ensureGraphIndexes(importedGraph);
+  updateNodeRadii();
 }
 
 function toggleToolbar() {
@@ -754,6 +831,18 @@ function toggleToolbar() {
   resizeCanvas();
   fitToView();
   queueDraw();
+}
+
+function updateNodeRadii() {
+  if (!sourceGraph) return;
+  const linkCount = new Map(sourceGraph.nodes.map((node) => [node.id, 0]));
+  for (const link of sourceGraph.links) {
+    linkCount.set(link.source.id, linkCount.get(link.source.id) + 1);
+    linkCount.set(link.target.id, linkCount.get(link.target.id) + 1);
+  }
+  sourceGraph.nodes.forEach((node) => {
+    node.radius = computeRadius(node, linkCount.get(node.id) || 0);
+  });
 }
 
 async function exportGraph() {
