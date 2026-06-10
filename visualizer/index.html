@@ -54,6 +54,12 @@
           </div>
         </div>
 
+        <button id="toolbarToggleButton" type="button" class="toolbar-collapse-toggle" title="Collapse left menu" aria-label="Collapse left menu" aria-expanded="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 6l-6 6 6 6"></path>
+          </svg>
+        </button>
+
         <label class="search-wrap">
           <span>Search</span>
           <input id="searchInput" type="search" placeholder="Find an entity or relationship">
@@ -71,31 +77,51 @@
 
           <label>
             <span>Link distance</span>
-            <input id="distanceRange" type="range" min="55" max="190" value="112">
+            <input id="distanceRange" type="range" min="70" max="220" value="145">
           </label>
         </div>
 
         <div class="action-row">
           <input id="graphFileInput" type="file" accept="application/json,.json" hidden>
           <button id="importButton" type="button" title="Import graph JSON" aria-label="Import graph JSON">
-            <svg aria-hidden="true" viewBox="0 0 24 24">
-              <path d="M12 3v12M7 8l5-5 5 5M5 15v4h14v-4"></path>
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
             </svg>
+            <span class="button-label">Import</span>
           </button>
           <button id="fitButton" type="button" title="Fit graph to view" aria-label="Fit graph to view">
-            <svg aria-hidden="true" viewBox="0 0 24 24">
-              <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5M8 12h8M12 8v8"></path>
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 3H3v5"></path>
+              <path d="M16 3h5v5"></path>
+              <path d="M8 21H3v-5"></path>
+              <path d="M16 21h5v-5"></path>
+              <path d="M8 12h8"></path>
+              <path d="M12 8v8"></path>
             </svg>
+            <span class="button-label">Fit</span>
           </button>
           <button id="reloadButton" type="button" title="Reload imported graph" aria-label="Reload imported graph" disabled>
-            <svg aria-hidden="true" viewBox="0 0 24 24">
-              <path d="M20 6v5h-5M4 18v-5h5M18.4 9A7 7 0 0 0 6.2 6.8L4 9M5.6 15a7 7 0 0 0 12.2 2.2L20 15"></path>
+            <svg viewBox="0 0 30 30" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M29 16 C29 22 24 29 16 29 8 29 3 22 3 16 3 10 8 3 16 3 21 3 25 6 27 9 M20 10 L27 9 28 2"></path>
             </svg>
+            <span class="button-label">Reload</span>
+          </button>
+          <button id="toggleLayoutButton" type="button" title="Pause layout" aria-label="Pause layout">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+            <span class="button-label">Pause</span>
           </button>
           <button id="exportButton" type="button" title="Export graph JSON" aria-label="Export graph JSON" disabled>
-            <svg aria-hidden="true" viewBox="0 0 24 24">
-              <path d="M12 21V9M7 16l5 5 5-5M5 3h14v4H5z"></path>
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
+            <span class="button-label">Export</span>
           </button>
         </div>
       </section>
@@ -109,9 +135,11 @@
         <div class="panel-header">
           <p>Selected Entity</p>
           <button id="clearSelection" type="button" title="Clear selection" aria-label="Clear selection">
-            <svg aria-hidden="true" viewBox="0 0 24 24">
-              <path d="M6 6l12 12M18 6 6 18"></path>
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
+            <span class="button-label">Clear</span>
           </button>
         </div>
         <h2 id="selectedTitle">Select a node</h2>
@@ -126,14 +154,34 @@
           </label>
           <div class="entity-actions">
             <button id="saveEntityButton" type="submit" title="Save selected entity" aria-label="Save selected entity" disabled>
-              <svg aria-hidden="true" viewBox="0 0 24 24">
-                <path d="M19 21H5V3h11l3 3zM8 21v-7h8v7M8 3v5h7"></path>
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
               </svg>
+              <span class="button-label">Save</span>
             </button>
             <button id="resetEntityButton" type="button" title="Reset selected entity edits" aria-label="Reset selected entity edits" disabled>
-              <svg aria-hidden="true" viewBox="0 0 24 24">
-                <path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"></path>
+              <svg viewBox="0 0 30 30" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M29 16 C29 22 24 29 16 29 8 29 3 22 3 16 3 10 8 3 16 3 21 3 25 6 27 9 M20 10 L27 9 28 2"></path>
               </svg>
+              <span class="button-label">Reset</span>
+            </button>
+            <button id="pinNodeButton" type="button" title="Pin node position" aria-label="Pin node position" disabled>
+              <svg viewBox="0 0 24 24" fill="none" >
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M16.4746 4.3747L19.6474 7.55072C20.6549 8.55917 21.4713 9.37641 21.9969 10.0856C22.5382 10.8161 22.8881 11.5853 22.6982 12.4634C22.5083 13.3415 21.8718 13.8972 21.0771 14.3383C20.3055 14.7665 19.2245 15.1727 17.8906 15.6738L15.9136 16.4166C15.1192 16.7151 14.9028 16.8081 14.742 16.9474C14.6611 17.0174 14.5887 17.0967 14.5263 17.1837C14.4021 17.3568 14.329 17.5812 14.1037 18.4L14.0914 18.4449C13.8627 19.2762 13.6739 19.9623 13.4671 20.4774C13.2573 21.0003 12.974 21.4955 12.465 21.786C12.1114 21.9878 11.7112 22.0936 11.3041 22.093C10.7179 22.0921 10.227 21.8014 9.78647 21.4506C9.35243 21.1049 8.8497 20.6016 8.24065 19.9919L6.65338 18.403L2.5306 22.53C2.23786 22.823 1.76298 22.8233 1.46994 22.5305C1.1769 22.2378 1.17666 21.7629 1.4694 21.4699L5.59326 17.3418L4.05842 15.8054C3.45318 15.1996 2.9536 14.6995 2.61002 14.2678C2.26127 13.8297 1.97215 13.3421 1.96848 12.7599C1.96586 12.3451 2.07354 11.9371 2.28053 11.5777C2.57116 11.0731 3.06341 10.7919 3.58296 10.5834C4.09477 10.3779 4.77597 10.1901 5.60112 9.96265L5.6457 9.95036C6.46601 9.7242 6.69053 9.65088 6.86346 9.52638C6.9526 9.4622 7.0337 9.38748 7.10499 9.30383C7.24338 9.14144 7.33502 8.92324 7.62798 8.12367L8.34447 6.16811C8.83874 4.819 9.23907 3.72629 9.66362 2.9461C10.1005 2.14324 10.654 1.49811 11.5357 1.30359C12.4175 1.10904 13.1908 1.46156 13.9246 2.0063C14.6375 2.53559 15.4597 3.35863 16.4746 4.3747ZM13.0304 3.21067C12.4277 2.76322 12.1086 2.71327 11.8588 2.76836C11.609 2.82349 11.3402 3.0033 10.9812 3.66306C10.6161 4.33394 10.2525 5.32066 9.73087 6.7443L9.03642 8.63971C9.02304 8.67621 9.00987 8.71226 8.99686 8.74786C8.76267 9.3886 8.58179 9.88351 8.24665 10.2768C8.09712 10.4522 7.92696 10.609 7.73987 10.7437C7.3205 11.0456 6.81257 11.1852 6.15537 11.3659C6.11884 11.3759 6.08184 11.3861 6.04438 11.3964C5.16337 11.6393 4.56523 11.8054 4.1418 11.9754C3.71693 12.146 3.615 12.2662 3.58038 12.3263C3.50616 12.4552 3.46751 12.6015 3.46845 12.7504C3.46889 12.8201 3.49835 12.9752 3.78366 13.3337C4.06799 13.6909 4.50615 14.1312 5.15229 14.778L9.26897 18.8989C9.91923 19.5498 10.3618 19.9912 10.721 20.2772C11.0814 20.5643 11.2369 20.5929 11.3064 20.593C11.4519 20.5933 11.595 20.5554 11.7215 20.4832C11.7821 20.4486 11.9033 20.3466 12.0751 19.9187C12.2462 19.4923 12.4133 18.8896 12.6574 18.0021C12.6677 17.9648 12.6778 17.9279 12.6878 17.8914C12.8678 17.2352 13.0069 16.7283 13.3075 16.3093C13.4384 16.1268 13.5903 15.9604 13.76 15.8134C14.15 15.4758 14.642 15.2914 15.2786 15.0527C15.314 15.0395 15.3498 15.0261 15.386 15.0124L17.3032 14.2921C18.7112 13.7631 19.6865 13.3946 20.3491 13.0268C21.0001 12.6655 21.178 12.3967 21.2321 12.1463C21.2863 11.8958 21.2353 11.5773 20.7917 10.9787C20.3403 10.3695 19.6045 9.63013 18.541 8.5656L15.4588 5.48018C14.3876 4.40792 13.6433 3.66571 13.0304 3.21067Z" fill="#1C274C"></path>
+            </svg>
+              <span class="button-label">Pin</span>
+            </button>
+            <button id="removeNodeButton" type="button" title="Remove selected node" aria-label="Remove selected node" disabled>
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18"></path>
+                <path d="M8 6V4h8v2"></path>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                <path d="M10 11v6"></path>
+                <path d="M14 11v6"></path>
+              </svg>
+              <span class="button-label">Remove</span>
             </button>
           </div>
         </form>
@@ -158,6 +206,41 @@
         <div class="connections">
           <h3>Connections</h3>
           <ul id="connectionList"></ul>
+        </div>
+        <div class="entity-creator">
+          <h3>Add entity</h3>
+          <label>
+            <span>Name</span>
+            <input id="addEntityNameInput" type="text" autocomplete="off" placeholder="New entity name" disabled>
+          </label>
+          <label>
+            <span>Description</span>
+            <input id="addEntityDescriptionInput" type="text" autocomplete="off" placeholder="Optional relationship or note" disabled>
+          </label>
+          <button id="addEntityButton" type="button" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 5v14"></path>
+              <path d="M5 12h14"></path>
+            </svg>
+            <span class="button-label">Create</span>
+          </button>
+        </div>
+        <div class="relationship-builder">
+          <h3>Add relationship</h3>
+          <label>
+            <span>Target entity</span>
+            <select id="relationshipTarget" disabled></select>
+          </label>
+          <label>
+            <span>Relationship</span>
+            <input id="relationshipText" type="text" autocomplete="off" placeholder="Describe the relationship" disabled>
+          </label>
+          <button id="addRelationshipButton" type="button" disabled>
+            <svg viewBox="0 0 50 50" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M39 0C35.1459 0 32 3.14585 32 7C32 8.84299 32.7244 10.5189 33.8965 11.7715C33.8965 11.7715 25.5254 22 25.5254 22C25.5254 22 13.9199 22 13.9199 22C13.4307 18.6175 10.5138 16 7 16C3.14585 16 0 19.1459 0 23C0 26.8541 3.14585 30 7 30C10.5138 30 13.4307 27.3825 13.9199 24C13.9199 24 25.502 24 25.502 24C25.502 24 33.5352 34.6406 33.5352 34.6406C32.5767 35.8386 32 37.3533 32 39C32 42.8541 35.1459 46 39 46C42.8541 46 46 42.8541 46 39C46 35.1459 42.8541 32 39 32C37.5153 32 36.1391 32.4713 35.0039 33.2656C35.0039 33.2656 27.2715 23.0254 27.2715 23.0254C27.2715 23.0254 35.4551 13.0215 35.4551 13.0215C36.4969 13.6381 37.7064 14 39 14C42.8541 14 46 10.8541 46 7C46 3.14585 42.8541 0 39 0C39 0 39 0 39 0ZM39 2C41.7733 2 44 4.22673 44 7C44 9.77327 41.7733 12 39 12C36.2267 12 34 9.77327 34 7C34 4.22673 36.2267 2 39 2C39 2 39 2 39 2ZM7 18C9.77327 18 12 20.2267 12 23C12 25.7733 9.77327 28 7 28C4.22673 28 2 25.7733 2 23C2 20.2267 4.22673 18 7 18C7 18 7 18 7 18ZM39 34C41.7733 34 44 36.2267 44 39C44 41.7733 41.7733 44 39 44C36.2267 44 34 41.7733 34 39C34 36.2267 36.2267 34 39 34C39 34 39 34 39 34Z" fill="#000000" transform="translate(2 2)" />
+            </svg>
+            <span class="button-label">Connect</span>
+          </button>
         </div>
       </aside>
     </main>

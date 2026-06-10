@@ -6,10 +6,12 @@ const edgeFilter = document.querySelector("#edgeFilter");
 const distanceRange = document.querySelector("#distanceRange");
 const graphFileInput = document.querySelector("#graphFileInput");
 const importButton = document.querySelector("#importButton");
+const toolbarToggleButton = document.querySelector("#toolbarToggleButton");
 const fitButton = document.querySelector("#fitButton");
 const reloadButton = document.querySelector("#reloadButton");
 const exportButton = document.querySelector("#exportButton");
 const emptyState = document.querySelector("#emptyState");
+const appShell = document.querySelector(".app-shell");
 const selectedTitle = document.querySelector("#selectedTitle");
 const selectedMeta = document.querySelector("#selectedMeta");
 const connectionList = document.querySelector("#connectionList");
@@ -19,11 +21,21 @@ const entityNameInput = document.querySelector("#entityNameInput");
 const entityDescriptionInput = document.querySelector("#entityDescriptionInput");
 const saveEntityButton = document.querySelector("#saveEntityButton");
 const resetEntityButton = document.querySelector("#resetEntityButton");
+const pinNodeButton = document.querySelector("#pinNodeButton");
+const removeNodeButton = document.querySelector("#removeNodeButton");
+const toggleLayoutButton = document.querySelector("#toggleLayoutButton");
+const relationshipTarget = document.querySelector("#relationshipTarget");
+const relationshipText = document.querySelector("#relationshipText");
+const addRelationshipButton = document.querySelector("#addRelationshipButton");
+const addEntityNameInput = document.querySelector("#addEntityNameInput");
+const addEntityDescriptionInput = document.querySelector("#addEntityDescriptionInput");
+const addEntityButton = document.querySelector("#addEntityButton");
 
 let sourceGraph = { nodes: [], links: [] };
 let visibleGraph = { nodes: [], links: [] };
 let selectedNode = null;
 let hoveredNode = null;
+let hoveredLink = null;
 let transform = { x: 0, y: 0, scale: 1 };
 let pointer = { x: 0, y: 0, down: false, dragNode: null, panning: false };
 let animationFrame = null;
@@ -31,6 +43,8 @@ let simulationTimer = null;
 let importedGraph = null;
 let importedFileName = "";
 let hasLocalEdits = false;
+let toolbarCollapsed = false;
+let layoutRunning = true;
 
 const palette = {
   node: "#dfe7f1",
@@ -55,7 +69,9 @@ function loadGraph(data, fileName = "") {
   sourceGraph = normalizeGraph(data);
   selectedNode = sourceGraph.nodes[0] || null;
   applyFilters();
+  updateRelationshipTargetOptions();
   updateDetails();
+  setEntityCreatorEnabled(true);
   fitToView();
   startSimulation();
   reloadButton.disabled = false;
@@ -77,12 +93,19 @@ function normalizeGraph(data) {
 
   const byId = new Map(nodes.map((node) => [node.id, node]));
   const links = (data.relationships || [])
-    .map((relationship) => ({
-      source: byId.get(Number(relationship.from)),
-      target: byId.get(Number(relationship.to)),
-      relationship: relationship.relationship || "Unknown"
-    }))
-    .filter((link) => link.source && link.target);
+    .map((relationship, index) => {
+      const source = byId.get(Number(relationship.from));
+      const target = byId.get(Number(relationship.to));
+      if (!source || !target) return null;
+      return {
+        id: `${relationship.from}-${relationship.to}-${index}`,
+        source,
+        target,
+        relationship: relationship.relationship || "Unknown",
+        original: relationship
+      };
+    })
+    .filter(Boolean);
 
   return { nodes, links };
 }
@@ -129,6 +152,7 @@ function resetGraphState(message = "Import a graph JSON file") {
   reloadButton.disabled = true;
   exportButton.disabled = true;
   updateDetails();
+  setEntityCreatorEnabled(false);
   fitToView();
   queueDraw();
 }
@@ -180,12 +204,119 @@ function applyFilters() {
   summary.textContent = `${sourceGraph.nodes.length} entities | ${sourceGraph.links.length} relationships | ${knownCount} known${sourceName}${editState}`;
   emptyState.hidden = visibleGraph.nodes.length > 0;
   updateDetails();
+  updateRelationshipTargetOptions();
   queueDraw();
 }
 
 function isKnownRelationship(value) {
   const normalized = String(value || "").trim().toLowerCase();
   return normalized && normalized !== "unknown" && !normalized.includes("couldn't find") && !normalized.includes("does not mention");
+}
+
+function updateRelationshipTargetOptions() {
+  relationshipTarget.innerHTML = "";
+
+  if (!selectedNode) {
+    return;
+  }
+
+  const options = sourceGraph.nodes
+    .filter((node) => node !== selectedNode)
+    .sort((a, b) => a.title.localeCompare(b.title));
+
+  for (const node of options) {
+    const option = document.createElement("option");
+    option.value = node.key;
+    option.textContent = node.title;
+    relationshipTarget.append(option);
+  }
+}
+
+
+function addRelationship() {
+  if (!selectedNode || !importedGraph) return;
+
+  const targetKey = relationshipTarget.value;
+  const targetNode = sourceGraph.nodes.find((node) => node.key === targetKey);
+  if (!targetNode || targetNode === selectedNode) {
+    summary.textContent = "Select a different target entity.";
+    return;
+  }
+
+  const relationship = relationshipText.value.trim() || "Unknown";
+  const existing = importedGraph.relationships.some((rel) => (
+    (String(rel.from) === String(selectedNode.id) && String(rel.to) === String(targetNode.id)) ||
+    (String(rel.from) === String(targetNode.id) && String(rel.to) === String(selectedNode.id))
+  ));
+
+  if (existing) {
+    summary.textContent = "This relationship already exists.";
+    return;
+  }
+
+  const newRelationship = {
+    from: selectedNode.id,
+    to: targetNode.id,
+    relationship
+  };
+
+  importedGraph.relationships = importedGraph.relationships || [];
+  importedGraph.relationships.push(newRelationship);
+
+  sourceGraph.links.push({
+    id: `${selectedNode.id}-${targetNode.id}-${sourceGraph.links.length}`,
+    source: selectedNode,
+    target: targetNode,
+    relationship,
+    original: newRelationship
+  });
+
+  relationshipText.value = "";
+  hasLocalEdits = true;
+  applyFilters();
+  updateDetails();
+  queueDraw();
+}
+
+function toggleNodePin() {
+  if (!selectedNode) return;
+  selectedNode.pinned = !selectedNode.pinned;
+  pinNodeButton.classList.toggle("active", selectedNode.pinned);
+  pinNodeButton.querySelector(".button-label").textContent = selectedNode.pinned ? "Pinned" : "Pin";
+  if (selectedNode.pinned) {
+    selectedNode.vx = 0;
+    selectedNode.vy = 0;
+  }
+}
+
+function toggleLayout() {
+  if (layoutRunning) {
+    stopSimulation();
+    toggleLayoutButton.querySelector(".button-label").textContent = "Resume";
+    toggleLayoutButton.title = "Resume layout";
+    toggleLayoutButton.setAttribute("aria-label", "Resume layout");
+    layoutRunning = false;
+  } else {
+    startSimulation();
+    toggleLayoutButton.querySelector(".button-label").textContent = "Pause";
+    toggleLayoutButton.title = "Pause layout";
+    toggleLayoutButton.setAttribute("aria-label", "Pause layout");
+    layoutRunning = true;
+  }
+}
+
+function focusOnNode(node) {
+  selectedNode = node;
+  updateDetails();
+  centerOnNode(node);
+  queueDraw();
+}
+
+function centerOnNode(node) {
+  const rect = canvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  transform.x = rect.width / 2 - node.x * transform.scale;
+  transform.y = rect.height / 2 - node.y * transform.scale;
 }
 
 function startSimulation() {
@@ -220,8 +351,8 @@ function tick() {
       const b = nodes[j];
       const dx = b.x - a.x;
       const dy = b.y - a.y;
-      const distanceSq = Math.max(60, dx * dx + dy * dy);
-      const force = Math.min(2.2, 900 / distanceSq);
+      const distanceSq = Math.max(100, dx * dx + dy * dy);
+      const force = Math.min(3.2, 1600 / distanceSq);
       const length = Math.sqrt(distanceSq);
       const fx = (dx / length) * force;
       const fy = (dy / length) * force;
@@ -233,7 +364,13 @@ function tick() {
   }
 
   for (const node of nodes) {
-    if (pointer.dragNode === node) continue;
+    if (pointer.dragNode === node || node.pinned) {
+      if (node.pinned) {
+        node.vx = 0;
+        node.vy = 0;
+      }
+      continue;
+    }
     node.vx += -node.x * 0.0008;
     node.vy += -node.y * 0.0008;
     node.vx *= 0.86;
@@ -267,11 +404,13 @@ function draw() {
   ctx.translate(transform.x, transform.y);
   ctx.scale(transform.scale, transform.scale);
 
-  ctx.lineWidth = 1.4 / transform.scale;
   for (const link of visibleGraph.links) {
     const selected = selectedNode && (link.source === selectedNode || link.target === selectedNode);
-    ctx.strokeStyle = selected ? palette.accent : palette.link;
-    ctx.globalAlpha = selected ? 0.92 : 0.58;
+    const hovered = hoveredLink === link;
+    const isOtherSelected = selected && !hovered && hoveredLink;
+    ctx.lineWidth = hovered ? 2.8 / transform.scale : selected ? 1.8 / transform.scale : 1.4 / transform.scale;
+    ctx.strokeStyle = hovered ? palette.hit : isOtherSelected ? palette.link : selected ? palette.accent : palette.link;
+    ctx.globalAlpha = hovered ? 1 : isOtherSelected ? 0.22 : selected ? 0.92 : 0.58;
     ctx.beginPath();
     ctx.moveTo(link.source.x, link.source.y);
     ctx.lineTo(link.target.x, link.target.y);
@@ -300,7 +439,7 @@ function draw() {
     ctx.lineWidth = 2.2 / transform.scale;
     ctx.stroke();
 
-    if (transform.scale > 0.55 || isSelected || isHovered) {
+    if (transform.scale > 0.75 || isSelected || isHovered) {
       ctx.font = `${Math.max(10, 12 / transform.scale)}px Inter, sans-serif`;
       ctx.fillStyle = palette.text;
       ctx.textAlign = "center";
@@ -366,6 +505,7 @@ function updateDetails() {
     setEntityFormEnabled(false);
     entityNameInput.value = "";
     entityDescriptionInput.value = "";
+    updateRelationshipTargetOptions();
     return;
   }
 
@@ -373,7 +513,8 @@ function updateDetails() {
     .filter((link) => link.source === selectedNode || link.target === selectedNode)
     .map((link) => ({
       node: link.source === selectedNode ? link.target : link.source,
-      relationship: link.relationship
+      link,
+      direction: link.source === selectedNode ? "outgoing" : "incoming"
     }));
 
   selectedTitle.textContent = selectedNode.title;
@@ -386,9 +527,50 @@ function updateDetails() {
     relationship: selectedNode.relationship || "Unknown",
     connections: connections.length
   });
-  connectionList.innerHTML = connections.length
-    ? connections.map((item) => `<li><strong>${escapeHtml(item.node.title)}</strong>${escapeHtml(item.relationship || "Unknown")}</li>`).join("")
-    : "<li>No relationships recorded for this entity.</li>";
+  connectionList.innerHTML = "";
+
+  if (!connections.length) {
+    connectionList.innerHTML = "<li>No relationships recorded for this entity.</li>";
+  } else {
+    for (const connection of connections) {
+      const item = document.createElement("li");
+      const titleButton = document.createElement("button");
+      titleButton.type = "button";
+      titleButton.className = "connection-target";
+      titleButton.textContent = connection.node.title;
+      titleButton.addEventListener("click", () => focusOnNode(connection.node));
+
+      const relationship = document.createElement("div");
+      relationship.className = "connection-relationship";
+      relationship.textContent = connection.link.relationship || "Unknown";
+
+      const removeButton = document.createElement("button");
+      removeButton.type = "button";
+      removeButton.className = "connection-remove";
+      removeButton.textContent = "Remove";
+      removeButton.addEventListener("click", () => removeRelationship(connection.link));
+
+      item.addEventListener("mouseenter", () => {
+        hoveredLink = connection.link;
+        queueDraw();
+      });
+      item.addEventListener("mouseleave", () => {
+        hoveredLink = null;
+        queueDraw();
+      });
+      item.addEventListener("focusin", () => {
+        hoveredLink = connection.link;
+        queueDraw();
+      });
+      item.addEventListener("focusout", () => {
+        hoveredLink = null;
+        queueDraw();
+      });
+
+      item.append(titleButton, relationship, removeButton);
+      connectionList.append(item);
+    }
+  }
 }
 
 function setEntityFormEnabled(enabled) {
@@ -396,6 +578,17 @@ function setEntityFormEnabled(enabled) {
   entityDescriptionInput.disabled = !enabled;
   saveEntityButton.disabled = !enabled;
   resetEntityButton.disabled = !enabled;
+  pinNodeButton.disabled = !enabled;
+  removeNodeButton.disabled = !enabled;
+  relationshipTarget.disabled = !enabled;
+  relationshipText.disabled = !enabled;
+  addRelationshipButton.disabled = !enabled;
+}
+
+function setEntityCreatorEnabled(enabled) {
+  addEntityNameInput.disabled = !enabled;
+  addEntityDescriptionInput.disabled = !enabled;
+  addEntityButton.disabled = !enabled;
 }
 
 function saveSelectedEntity() {
@@ -437,17 +630,170 @@ function saveSelectedEntity() {
   queueDraw();
 }
 
-function exportGraph() {
+function removeSelectedNode() {
+  if (!selectedNode || !importedGraph) return;
+
+  const confirmed = window.confirm(`Remove "${selectedNode.title}" and all of its relationships from this graph?`);
+  if (!confirmed) return;
+
+  deleteNode(selectedNode);
+  selectedNode = null;
+  hasLocalEdits = true;
+  applyFilters();
+  queueDraw();
+}
+
+function addEntity() {
+  if (!importedGraph) return;
+
+  const name = addEntityNameInput.value.trim();
+  const description = addEntityDescriptionInput.value.trim();
+  if (!name) {
+    summary.textContent = "Name is required to add a new entity.";
+    addEntityNameInput.focus();
+    return;
+  }
+
+  const duplicate = Object.values(importedGraph.entities || {}).find((entity) => String(entity.title || "").trim().toLowerCase() === name.toLowerCase());
+  if (duplicate) {
+    summary.textContent = `Entity "${name}" already exists in this graph.`;
+    addEntityNameInput.focus();
+    return;
+  }
+
+  const nextId = Number.isInteger(importedGraph.curr_id) ? importedGraph.curr_id : Math.max(-1, ...Object.values(importedGraph.entities || {}).map((entity) => Number(entity.id) || -1)) + 1;
+  importedGraph.curr_id = nextId + 1;
+  const entityKey = String(nextId);
+  const entity = {
+    id: nextId,
+    type: "Entity",
+    title: name,
+    relationship: description || "Unknown",
+    relationship_known: isKnownRelationship(description || "Unknown"),
+    mentions: 1,
+    context: null
+  };
+
+  importedGraph.entities = importedGraph.entities || {};
+  importedGraph.entities[entityKey] = entity;
+
+  const newNode = {
+    ...entity,
+    key: entityKey,
+    radius: 8 + Math.min(8, Number(entity.mentions || 1) * 1.5),
+    x: (selectedNode?.x || 0) + 40,
+    y: (selectedNode?.y || 0) + 40,
+    vx: 0,
+    vy: 0
+  };
+
+  sourceGraph.nodes.push(newNode);
+  ensureGraphIndexes(importedGraph);
+  selectedNode = newNode;
+  addEntityNameInput.value = "";
+  addEntityDescriptionInput.value = "";
+  hasLocalEdits = true;
+  applyFilters();
+  updateDetails();
+  centerOnNode(newNode);
+  queueDraw();
+}
+
+function removeRelationship(link) {
+  if (!link || !importedGraph) return;
+  const confirmed = window.confirm(`Remove the relationship between "${link.source.title}" and "${link.target.title}"?`);
+  if (!confirmed) return;
+
+  deleteRelationship(link);
+  hasLocalEdits = true;
+  applyFilters();
+  updateDetails();
+  queueDraw();
+}
+
+function deleteRelationship(link) {
+  sourceGraph.links = sourceGraph.links.filter((item) => item !== link);
+  if (Array.isArray(importedGraph.relationships)) {
+    importedGraph.relationships = importedGraph.relationships.filter((relationship) => {
+      const fromId = String(relationship.from);
+      const toId = String(relationship.to);
+      return !(fromId === String(link.source.id) && toId === String(link.target.id)) && !(fromId === String(link.target.id) && toId === String(link.source.id));
+    });
+  }
+}
+
+function deleteNode(node) {
+  sourceGraph.nodes = sourceGraph.nodes.filter((item) => item !== node);
+  sourceGraph.links = sourceGraph.links.filter((link) => link.source !== node && link.target !== node);
+
+  if (importedGraph?.entities && importedGraph.entities[node.key] !== undefined) {
+    delete importedGraph.entities[node.key];
+  }
+
+  if (Array.isArray(importedGraph?.relationships)) {
+    importedGraph.relationships = importedGraph.relationships.filter((relationship) => {
+      const fromId = Number(relationship.from);
+      const toId = Number(relationship.to);
+      return fromId !== Number(node.id) && toId !== Number(node.id);
+    });
+  }
+
+  ensureGraphIndexes(importedGraph);
+}
+
+function toggleToolbar() {
+  toolbarCollapsed = !toolbarCollapsed;
+  if (!appShell) return;
+  appShell.dataset.toolbarCollapsed = toolbarCollapsed ? "true" : "false";
+  toolbarToggleButton.setAttribute("aria-expanded", String(!toolbarCollapsed));
+  toolbarToggleButton.title = toolbarCollapsed ? "Expand left menu" : "Collapse left menu";
+  const svg = toolbarToggleButton.querySelector("svg");
+  if (svg) {
+    svg.style.transform = toolbarCollapsed ? "rotate(180deg)" : "rotate(0deg)";
+  }
+  resizeCanvas();
+  fitToView();
+  queueDraw();
+}
+
+async function exportGraph() {
   if (!importedGraph) return;
 
   ensureGraphIndexes(importedGraph);
-  const json = JSON.stringify(importedGraph, null, 2);
-  const blob = new Blob([`${json}\n`], { type: "application/json" });
+  const json = JSON.stringify(importedGraph, null, 2) + "\n";
+  const baseName = importedFileName.replace(/\.json$/i, "") || "omni-net-graph";
+  const fileName = `${baseName}-edited.json`;
+
+  if (window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: fileName,
+        types: [
+          {
+            description: "JSON file",
+            accept: { "application/json": [".json"] }
+          }
+        ]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(json);
+      await writable.close();
+      hasLocalEdits = false;
+      applyFilters();
+      return;
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        showError(error);
+      }
+      // Fall back to the legacy download if the user cancels or if saving is aborted.
+    }
+  }
+
+  const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  const baseName = importedFileName.replace(/\.json$/i, "") || "omni-net-graph";
   link.href = url;
-  link.download = `${baseName}-edited.json`;
+  link.download = fileName;
   document.body.append(link);
   link.click();
   link.remove();
@@ -562,6 +908,10 @@ graphFileInput.addEventListener("change", async () => {
   }
 });
 fitButton.addEventListener("click", fitToView);
+toggleLayoutButton.addEventListener("click", toggleLayout);
+addRelationshipButton.addEventListener("click", addRelationship);
+addEntityButton.addEventListener("click", addEntity);
+toolbarToggleButton.addEventListener("click", toggleToolbar);
 reloadButton.addEventListener("click", () => {
   if (!importedGraph) return;
   try {
@@ -576,6 +926,8 @@ entityForm.addEventListener("submit", (event) => {
   saveSelectedEntity();
 });
 resetEntityButton.addEventListener("click", updateDetails);
+pinNodeButton.addEventListener("click", toggleNodePin);
+removeNodeButton.addEventListener("click", removeSelectedNode);
 clearSelection.addEventListener("click", () => {
   selectedNode = null;
   updateDetails();

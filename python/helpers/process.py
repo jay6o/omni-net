@@ -59,9 +59,21 @@ def process_html(url: str, person_of_interest: str) -> None :
       process_content(nlp, contents, graph_obj, person_of_interest, graph_lock)
       return 0
     else:
+      print("Raised exception processing html")
       raise Exception(f"Could not parse contents of page")
   except Exception as e:
     print(f"Raised when processing html: {e}")
+
+def process_text(text: str, person_of_interest: str) -> int:
+  """Process plain text and add it to the in-memory graph."""
+  person_of_interest = normalize_name(person_of_interest.strip())
+  memory_path = Path("memory") / "graph.json"
+  graph_obj = EntityGraph(memory_path) # Load graph
+  graph_lock = Lock() # Initialize lock
+  graph_obj = initialize_graph(graph_obj, person_of_interest, graph_lock)
+
+  process_content(nlp, text, graph_obj, person_of_interest, graph_lock)
+  return 0
 
 if __name__ == "__main__":
    pass

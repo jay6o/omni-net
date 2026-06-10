@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 #import cProfile
 
-from helpers.process import process_pdf, process_html
+from helpers.process import process_pdf, process_html, process_text
 from helpers.search_relation import search_relation
 from env import INPUT, POI
 
@@ -13,7 +13,11 @@ def main() -> int :
     file_path = Path("memory/graph.json")
     if not file_path.is_file():
          create_graph_json(file_path)
-    process_html(INPUT, POI)
+
+    if INPUT.startswith("http://") or INPUT.startswith("https://"):
+        process_html(INPUT, POI)
+    else:
+        process_text(INPUT, POI)
 
 def create_graph_json(file_path: Path):
         with file_path.open(mode="w", encoding="utf-8") as file:

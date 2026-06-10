@@ -8,6 +8,7 @@ Currently supported inputs:
 | ---------------- |
 | .pdf             |
 | url              |
+| text (string)    |
 
 - From `python` install all requirements by running `pip3 install -r requirements.txt`
 - Edit `python/env.py.template` to store your inputs, then rename it to `env.py`

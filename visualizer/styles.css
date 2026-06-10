@@ -42,9 +42,27 @@ select {
   min-height: 100vh;
 }
 
+.app-shell[data-toolbar-collapsed="true"] {
+  grid-template-columns: 48px minmax(0, 1fr) 340px;
+}
+
+.app-shell[data-toolbar-collapsed="true"] .toolbar {
+  width: 48px;
+  padding: 12px 4px;
+}
+
+.app-shell[data-toolbar-collapsed="true"] .toolbar > *:not(.toolbar-collapse-toggle) {
+  display: none;
+}
+
+.app-shell[data-toolbar-collapsed="true"] .action-row {
+  display: block;
+}
+
 .toolbar,
 .detail-panel {
   min-width: 0;
+  min-height: 0;
   overflow: auto;
   background: var(--panel);
   border-color: var(--line);
@@ -53,6 +71,11 @@ select {
 }
 
 .toolbar {
+  overflow: visible;
+}
+
+.toolbar {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 22px;
@@ -163,14 +186,50 @@ input[type="range"] {
 
 .action-row {
   display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: 10px;
 }
 
+.toolbar-collapse-toggle {
+  position: absolute;
+  top: 50%;
+  right: -18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  min-width: auto;
+  transform: translateY(-50%);
+  z-index: 3;
+}
+
+.toolbar-collapse-toggle svg {
+  transition: transform 0.2s ease;
+}
+
+.toolbar-collapse-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.app-shell[data-toolbar-collapsed="true"] .toolbar-collapse-toggle {
+  right: -18px;
+  transform: translateY(-50%);
+}
+
 button {
-  display: inline-grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
+  display: inline-flex;
+  flex-shrink: 1;
+  min-width: 50px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 58px;
+  padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel-strong);
@@ -193,14 +252,82 @@ button:disabled:hover {
   color: var(--text);
 }
 
-button svg {
-  width: 19px;
-  height: 19px;
+button svg,
+button i {
+  width: 18px;
+  height: 18px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 2;
+}
+
+button.active {
+  border-color: var(--accent);
+  background: rgba(89, 199, 165, 0.12);
+}
+
+.button-label {
+  font-size: 0.68rem;
+  line-height: 1.2;
+  color: var(--muted);
+  text-transform: none;
+}
+
+.relationship-builder {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.relationship-builder h3 {
+  margin-bottom: 12px;
+}
+
+.relationship-builder button {
+  width: auto;
+  min-width: 0;
+}
+
+.entity-creator {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.entity-creator h3 {
+  margin-bottom: 12px;
+}
+
+.entity-creator button {
+  width: auto;
+  min-width: 0;
+}
+
+.connection-relationship {
+  padding-top: 4px;
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+li button.connection-remove {
+  align-self: start;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+}
+
+li button.connection-remove:hover,
+li button.connection-remove:focus {
+  border-color: var(--accent);
+  color: var(--accent);
+  outline: none;
 }
 
 .graph-stage {
@@ -331,18 +458,54 @@ ul {
 }
 
 li {
-  padding: 12px;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--panel-strong);
   color: var(--muted);
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
-li strong {
+li button.connection-target {
   display: block;
-  margin-bottom: 4px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
   color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+}
+
+li button.connection-target:hover,
+li button.connection-target:focus {
+  color: var(--accent);
+  outline: none;
+}
+
+li label {
+  display: grid;
+  gap: 6px;
+}
+
+li textarea {
+  width: 100%;
+  min-height: 72px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  padding: 10px 12px;
+  resize: vertical;
+  font: inherit;
+}
+
+li textarea:focus {
+  border-color: var(--accent);
 }
 
 @media (max-width: 980px) {

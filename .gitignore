@@ -2,6 +2,7 @@
 system.md
 env.py
 **/graph.json
+**/python/memory/**.json
 cpp/build/**
 cpp/src/lib/**
 files/*.pdf

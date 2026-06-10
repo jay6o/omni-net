@@ -2,7 +2,6 @@ from helpers.normalize import normalize_name
 from helpers.is_person_name import is_person_name
 from helpers.names_alike import name_score
 from helpers.process_name import process_name
-from helpers.cross_check_relationships import cross_check_relationships
 
 from models.EntityGraph import EntityGraph
 
@@ -59,7 +58,7 @@ def process_content(nlp, content: str, graph_obj: EntityGraph, person_of_interes
   # ThreadPool for all names in our list of names to process
   with ThreadPoolExecutor(max_workers=3) as executor:
     futures = {
-      executor.submit(process_name, name, person_of_interest, graph_lock, graph_obj): name 
+      executor.submit(process_name, name, person_of_interest, graph_lock, graph_obj, content): name 
       for name in names_to_submit
     }
     for future in as_completed(futures):
@@ -69,5 +68,3 @@ def process_content(nlp, content: str, graph_obj: EntityGraph, person_of_interes
         print(f"Saved {name}")
       except Exception as e:
         print(f"Failed on {name}: {e}")
-
-  cross_check_relationships(person_of_interest, graph_lock, graph_obj)
