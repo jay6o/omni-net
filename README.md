@@ -2,6 +2,9 @@
 
 ## Use web crawling, NLP, and LLM to build a visual graph of all relationships between entities in a social network using open source information.
 
+<img width="1440" height="780" alt="Screenshot 2026-06-08 at 2 38 38 PM" src="https://github.com/user-attachments/assets/5e94e7a1-c409-4eec-a1f8-a18f5ec15cf8" />
+
+
 ## Usage
 Currently supported inputs:
 | Type             |
@@ -18,6 +21,8 @@ Currently supported inputs:
 ```
 
 The program will run with logs and update the graph in `python/memory/graph.json`
+
+You can then use import this graph.json into the web app to visualize the relationships.
 
 ## Graph visualizer
 
@@ -39,15 +44,12 @@ python3 -m http.server 5174
 
 Then visit `http://127.0.0.1:5174/`.
 
-To deploy it, publish the `visualizer/` directory as a static site. No build step is required. The page includes SEO metadata, social preview metadata, a web manifest, robots rules, and local brand assets. You can still import the crawler output from `python/memory/graph.json` manually with the upload button.
-
-After importing a graph, select any entity to edit its name or description in the side panel. Use the export button to download the updated JSON file.
-
+You can also use the web app at `https://omni-net-flame.vercel.app/` and import your graph file.
 ## How it works
 
 1. Input source containing references to other entities, along with our entity of interest
 2. Program processes language from the input to identify entities using spaCy NLP
-3. Take each identified entity and run a relationship search using the crawling bot (ddgs, httpx, & bs4)
+3. Take each identified entity and run a relationship search using the crawling bot (cURL & BeautifulSoup)
 4. Using crawling results, pass them to Ollama to give relationships a title
 5. Store the relationships in memory as a graph
 
