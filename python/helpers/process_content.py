@@ -7,6 +7,7 @@ from models.EntityGraph import EntityGraph
 
 from threading import Lock
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from tqdm import tqdm
 
 def process_content(nlp, content: str, graph_obj: EntityGraph, person_of_interest: str, graph_lock: Lock):
   """Takes content as a string and processes it using spaCy nlp
@@ -61,10 +62,12 @@ def process_content(nlp, content: str, graph_obj: EntityGraph, person_of_interes
       executor.submit(process_name, name, person_of_interest, graph_lock, graph_obj, content): name 
       for name in names_to_submit
     }
-    for future in as_completed(futures):
-      name = futures[future]
-      try:
-        future.result()
-        print(f"Saved {name}")
-      except Exception as e:
-        print(f"Failed on {name}: {e}")
+    with tqdm(total=len(futures), desc="Processing entities", unit="entity", leave=True) as progress:
+      for future in as_completed(futures):
+        name = futures[future]
+        try:
+          future.result()
+          print(f"Saved {name}")
+        except Exception as e:
+          print(f"Failed on {name}: {e}")
+        progress.update(1)

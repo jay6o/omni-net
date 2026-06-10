@@ -14,6 +14,8 @@ def main() -> int :
     if not file_path.is_file():
          create_graph_json(file_path)
 
+    if INPUT.endswith(".pdf"):
+         process_pdf(INPUT, POI)
     if INPUT.startswith("http://") or INPUT.startswith("https://"):
         process_html(INPUT, POI)
     else:
